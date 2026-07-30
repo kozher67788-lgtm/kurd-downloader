@@ -1,8 +1,17 @@
-@import "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css";
+import './globals.css';
 
-body {
-  margin: 0;
-  padding: 0;
-  background-color: #020617;
-  color: #f8fafc;
+export const metadata = {
+  title: 'All Video Downloader Kurdish',
+  description: 'کـــوردســتـان | Kurdistan',
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="ckb" dir="rtl">
+      <head>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body>{children}</body>
+    </html>
+  );
 }
