@@ -1,74 +1,80 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export default function Home() {
   const [url, setUrl] = useState('');
-  const [videoData, setVideoData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
 
-  const handleFetch = () => {
+  const handleDownload = async (e) => {
+    e.preventDefault();
     if (!url) return;
+
     setLoading(true);
-    setTimeout(() => {
-      setVideoData({
-        title: "نموونەی ڤیدیۆ - All Video Downloader",
-        thumbnail: "https://via.placeholder.com/640x360",
-        duration: "03:45",
-        formats: [
-          { quality: "1080p Full HD", size: "45 MB" },
-          { quality: "720p HD", size: "25 MB" },
-          { quality: "Audio MP3", size: "3.5 MB" }
-        ]
+    setError('');
+    setResult(null);
+
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
       });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setResult(data);
+      } else {
+        setError(data.error || 'هەڵەیەک ڕووی دا');
+      }
+    } catch (err) {
+      setError('نەتوانرا پەیوەندی بە سێرڤەرەوە بپەسترێت');
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans p-4">
-      <nav className="max-w-5xl mx-auto py-4 border-b border-slate-800 flex justify-between items-center">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-          کــوردســتـان | Kurdistan
-        </h1>
-        <span className="bg-slate-800 text-xs px-3 py-1 rounded-full text-slate-300">v1.0</span>
-      </nav>
+    <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
+      <h1 style={{ fontSize: '2.5rem', marginBottom: '10px' }}>کــوردســتـان | Kurdistan</h1>
+      <p style={{ marginBottom: '20px', color: '#94a3b8' }}>داگرتنی ڤیدیۆ لە فیسبووک، ئینستاگرام و تیک تۆک</p>
 
-      <main className="max-w-3xl mx-auto my-12 text-center space-y-6">
-        <h2 className="text-3xl md:text-5xl font-extrabold">All Video Downloader Kurdish</h2>
-        <p className="text-slate-400">داگرتنی ڕاستەوخۆی ڤیدیۆ لە سەرجەم سۆشیال میدیاکان بە بەرزترین کوالێتی</p>
+      <form onSubmit={handleDownload} style={{ display: 'flex', gap: '10px', width: '100%', maxWidth: '500px', marginBottom: '20px' }}>
+        <input
+          type="text"
+          placeholder="لینکی ڤیدیۆ لێرە پەیست بکە..."
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #334155', backgroundColor: '#0f172a', color: '#fff' }}
+        />
+        <button type="submit" style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: '#fff', cursor: 'pointer', fontWeight: 'bold' }}>
+          {loading ? 'خەریکی گەڕان...' : 'داگرتن'}
+        </button>
+      </form>
 
-        <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl shadow-xl space-y-4">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input 
-              type="text" 
-              placeholder="لینکی ڤیدیۆ لێرە پەیست بکه..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500"
-            />
-            <button 
-              onClick={handleFetch}
-              className="bg-cyan-600 hover:bg-cyan-500 font-bold px-6 py-3 rounded-xl transition"
-            >
-              {loading ? "چاوەڕێ بکه..." : "داگرتن"}
-            </button>
+      {error && <p style={{ color: '#ef4444' }}>{error}</p>}
+
+      {result && (
+        <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#1e293b', borderRadius: '8px', maxWidth: '500px', width: '100%' }}>
+          <h3 style={{ marginBottom: '15px' }}>{result.title}</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {result.downloads && result.downloads.map((dl, index) => (
+              <a
+                key={index}
+                href={dl.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                style={{ display: 'block', padding: '10px', backgroundColor: '#10b981', color: '#fff', textDecoration: 'none', borderRadius: '6px', fontWeight: 'bold' }}
+              >
+                داگرتن ({dl.quality || 'کوالیتی بەرز'})
+              </a>
+            ))}
           </div>
-
-          {videoData && (
-            <div className="mt-6 border-t border-slate-800 pt-6 text-right space-y-4">
-              <h3 className="font-bold text-lg">{videoData.title}</h3>
-              <div className="space-y-2">
-                {videoData.formats.map((f, i) => (
-                  <div key={i} className="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
-                    <span>{f.quality} <span className="text-slate-500 text-sm">({f.size})</span></span>
-                    <button className="bg-blue-600 text-xs px-4 py-2 rounded-lg">داگرتن</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
